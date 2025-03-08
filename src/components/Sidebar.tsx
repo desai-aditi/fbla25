@@ -17,9 +17,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
   return (
     <div className="h-screen w-[20vw] flex flex-col bg-[var(--color-darkgreen)] text-[var(--color-white)] shadow-lg">
       {/* Logo */}
-      <div className="p-6 flex flex-col items-center">
-        <div className="text-2xl font-bold text-[var(--color-white)]">Fiscus</div>
-        <div className="text-sm text-[var(--color-offwhite)] mt-1">Empowering the next generation</div>
+      <div className="p-6 flex items-center">
+        <div className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'Fraunces' }}>fiscus.</div>
       </div>
 
       {/* Navigation */}
@@ -28,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           <li>
             <Link 
               to="/portfolio" 
-              className={`flex items-center p-3 rounded-lg transition-colors ${
+              className={`[var(--color-darkgreen)] flex items-center p-3 rounded-lg transition-colors ${
                 isActive('/portfolio') 
                   ? 'bg-[var(--color-pistachio)] text-[var(--color-darkgreen)]' 
                   : 'text-[var(--color-white)] hover:bg-[var(--color-pistachio)] hover:text-[var(--color-darkgreen)]'
@@ -41,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
           <li>
             <Link 
               to="/ledger" 
-              className={`text-white flex items-center p-3 rounded-lg transition-colors ${
+              className={`text-[var(--color-darkgreen)] flex items-center p-3 rounded-lg transition-colors ${
                 isActive('/ledger') 
                   ? 'bg-[var(--color-pistachio)] text-[var(--color-darkgreen)]' 
                   : 'text-[var(--color-white)] hover:bg-[var(--color-pistachio)] hover:text-[var(--color-darkgreen)]'
