@@ -249,7 +249,7 @@ const PortfolioPage = () => {
         {/* Welcome Section - Fixed height */}
         <div className="page-header">
           <h1 className="page-title">
-            Welcome back, {currentUser?.name || 'Student'}
+            Welcome back, <span className="text-[var(--color-cerulean)]">{currentUser?.name || 'Student'}</span>
           </h1>
         </div>
 
