@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
 import Layout from '../components/Layout';
 import { useFinance } from '../context/FinanceContext';
@@ -8,11 +8,12 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
-import { Button, Input, Table, Space, Modal, Card, Radio, DatePicker } from 'antd';
+import { Button, Input, Table, Space, Modal, Radio, DatePicker } from 'antd';
 import { SearchOutlined, FilterOutlined, DownloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
+import '../styles/components.css';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 7;
 
 // Colors for charts using CSS variables
 const COLORS = [
@@ -50,6 +51,8 @@ const LedgerPage = () => {
   const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
   const [barChartData, setBarChartData] = useState<ChartData[]>([]);
   const [pieChartData, setPieChartData] = useState<PieData[]>([]);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE);
 
   // Filter transactions based on search term and filters
   useEffect(() => {
@@ -86,6 +89,42 @@ const LedgerPage = () => {
     setFilteredTransactions(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   }, [transactions, searchTerm, selectedCategory, selectedType, dateRange]);
+
+  useEffect(() => {
+    if (!tableContainerRef.current) return;
+    
+    const calculateItemsPerPage = () => {
+      const container = tableContainerRef.current!;
+      const table = container.querySelector('.ant-table');
+      const header = container.querySelector('.ant-table-thead');
+      const row = container.querySelector('.ant-table-row');
+      const footer = container.parentElement?.querySelector('.table-footer');
+      
+      if (!table || !header || !row || !footer) return;
+      
+      const containerHeight = container.clientHeight;
+      const headerHeight = header.clientHeight;
+      const rowHeight = row.clientHeight;
+      const footerHeight = footer.clientHeight;
+      
+      const availableHeight = containerHeight - headerHeight - footerHeight;
+      const calculatedItems = Math.max(1, Math.floor(availableHeight / rowHeight));
+      
+      if (calculatedItems !== itemsPerPage) {
+        setItemsPerPage(calculatedItems);
+      }
+    };
+    
+    // Initial calculation after a short delay to ensure elements are rendered
+    setTimeout(calculateItemsPerPage, 100);
+    
+    const handleResize = () => {
+      calculateItemsPerPage();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [itemsPerPage]);
 
   // Prepare data for charts
   const prepareChartData = useCallback(() => {
@@ -201,10 +240,11 @@ const LedgerPage = () => {
     alert('PDF export functionality coming soon!');
   };
 
-  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+
   const paginatedTransactions = filteredTransactions.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   const columns = [
@@ -213,27 +253,29 @@ const LedgerPage = () => {
       dataIndex: 'date',
       key: 'date',
       render: (date: string) => format(new Date(date), 'MM/dd/yyyy'),
-      width: 100,
+      width: '15%',
       sorter: (a: Transaction, b: Transaction) => new Date(a.date).getTime() - new Date(b.date).getTime()
     },
     {
       title: 'Description',
       dataIndex: 'description',
       key: 'description',
-      ellipsis: true,
-      width: 150
+      ellipsis: {
+        showTitle: true,
+      },
+      width: '25%'
     },
     {
       title: 'Category',
       dataIndex: 'category',
       key: 'category',
-      width: 120
+      width: '15%'
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      width: 100,
+      width: '15%',
       render: (amount: number, record: Transaction) => (
         <span className={record.type === 'income' ? 'text-[var(--color-pistachio)]' : 'text-[var(--color-cerulean)]'}>
           {record.type === 'income' ? '+' : '-'}${amount.toFixed(2)}
@@ -244,7 +286,7 @@ const LedgerPage = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: '10%',
       render: (_: unknown, record: Transaction) => (
         <Space>
           <Button 
@@ -266,16 +308,16 @@ const LedgerPage = () => {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col">
+      <div className="page-container">
         {/* Header Section */}
-        <div className="mb-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-xs font-bold text-[var(--color-night)]">Transaction Ledger</h1>
+        <div className="page-header">
+          <div className="flex-col flex-row-sm items-center justify-between gap-4">
+            <h1 className="page-title">Transaction Ledger</h1>
             <Button 
               type="primary"
               icon={<PlusOutlined />}
               onClick={handleAdd}
-              className="bg-[var(--color-darkgreen)] hover:bg-[var(--color-darkgreen)] hover:opacity-80"
+              className="primary-button"
             >
               Add Transaction
             </Button>
@@ -283,19 +325,19 @@ const LedgerPage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex gap-4 overflow-hidden">
+        <div className="ledger-content">
           {/* Left Half - Transaction History */}
-          <div className="w-1/2 flex flex-col overflow-hidden">
+          <div className="content-section">
             {/* Search and Filter Section */}
-            <div className="bg-[var(--color-white)] p-4 rounded-lg mb-4">
-              <div className="flex flex-wrap gap-2 items-center">
-                <div className="flex-1 min-w-[200px]">
+            <div className="card search-filter-section">
+              <div className="flex-row items-center gap-2">
+                <div className="search-input-container">
                   <Input
                     placeholder="Search transactions..."
-                    prefix={<SearchOutlined className="text-[var(--color-cerulean)]" />}
+                    prefix={<SearchOutlined />}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    size="small"
+                    size="middle"
                   />
                 </div>
                 <Space>
@@ -303,28 +345,28 @@ const LedgerPage = () => {
                     type="text"
                     icon={<FilterOutlined />}
                     onClick={() => setShowFilters(!showFilters)}
-                    className="text-[var(--color-cerulean)] hover:text-[var(--color-cerulean)] hover:opacity-80"
+                    className="icon-button"
                   />
                   <Button 
                     type="text"
                     icon={<DownloadOutlined />}
                     onClick={handleDownloadPDF}
-                    className="text-[var(--color-cerulean)] hover:text-[var(--color-cerulean)] hover:opacity-80"
+                    className="icon-button"
                   />
                 </Space>
               </div>
 
               {/* Filter Panel */}
               {showFilters && (
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--color-night)] mb-1">Transaction Type</label>
+                <div className="filter-panel">
+                  <div className="form-group">
+                    <label className="form-label">Transaction Type</label>
                     <Radio.Group 
                       value={selectedType} 
                       onChange={(e) => setSelectedType(e.target.value as TransactionType)}
                       size="small"
                       buttonStyle="solid"
-                      className="flex flex-wrap gap-1"
+                      className="filter-group"
                     >
                       <Radio.Button value="">All</Radio.Button>
                       <Radio.Button value="income">Income</Radio.Button>
@@ -332,37 +374,40 @@ const LedgerPage = () => {
                     </Radio.Group>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--color-night)] mb-1">Category</label>
+                  <div className="form-group">
+                    <label className="form-label">Category</label>
                     <Radio.Group 
                       value={selectedCategory} 
                       onChange={(e) => setSelectedCategory(e.target.value as TransactionCategory)}
                       size="small"
                       buttonStyle="solid"
-                      className="flex flex-wrap gap-1"
+                      className="filter-group"
                     >
                       <Radio.Button value="">All</Radio.Button>
-                      <Radio.Button value="Food">Food & Dining</Radio.Button>
+                      <Radio.Button value="Work">Work</Radio.Button>
+                      <Radio.Button value="Allowance">Allowance</Radio.Button>
+                      <Radio.Button value="Part-time Job">Part-time Job</Radio.Button>
+                      <Radio.Button value="Gift">Gift</Radio.Button>
+                      <Radio.Button value="Other Income">Other Income</Radio.Button>
+                      <Radio.Button value="Food">Food</Radio.Button>
                       <Radio.Button value="Transportation">Transportation</Radio.Button>
                       <Radio.Button value="Entertainment">Entertainment</Radio.Button>
-                      <Radio.Button value="Utilities">Utilities</Radio.Button>
-                      <Radio.Button value="Salary">Salary</Radio.Button>
-                      <Radio.Button value="Other">Other</Radio.Button>
+                      <Radio.Button value="Clothing">Clothing</Radio.Button>
+                      <Radio.Button value="Education">Education</Radio.Button>
+                      <Radio.Button value="Savings">Savings</Radio.Button>
+                      <Radio.Button value="Other Expense">Other Expense</Radio.Button>
                     </Radio.Group>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-[var(--color-night)] mb-1">Date Range</label>
+                  <div className="form-group">
+                    <label className="form-label">Date Range</label>
                     <DatePicker.RangePicker
+                      className="date-picker"
                       size="small"
-                      onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
-                        if (dates && dates[0] && dates[1]) {
-                          setDateRange([dates[0], dates[1]]);
-                        } else {
-                          setDateRange([null, null]);
-                        }
+                      value={[dateRange[0] || null, dateRange[1] || null]}
+                      onChange={(dates) => {
+                        setDateRange(dates || [null, null]);
                       }}
-                      className="w-full"
                     />
                   </div>
                 </div>
@@ -370,27 +415,32 @@ const LedgerPage = () => {
             </div>
 
             {/* Transaction Table */}
-            <div className="bg-[var(--color-white)] p-4 rounded-lg flex-1 flex flex-col overflow-hidden">
-              <Table
-                columns={columns}
-                dataSource={paginatedTransactions}
-                pagination={false}
-                size="small"
-                rowKey="id"
-                scroll={{ y: 'calc(100% - 60px)' }}
-              />
+            <div className="card table-container">
+              <div className="table-content" ref={tableContainerRef}>
+                <Table
+                  dataSource={paginatedTransactions}
+                  columns={columns}
+                  className="transaction-table"
+                  style={{
+                    width: '100%'
+                  }}
+                  size="small"
+                  pagination={false}
+                  scroll={{ x: 'max-content' }}
+                />
+              </div>
 
               {/* Pagination */}
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                <div className="text-xs text-gray-600">
-                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)} of {filteredTransactions.length} transactions
-                </div>
+              <div className="table-footer">
+              <div className="table-pagination-info">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} of {filteredTransactions.length} transactions
+              </div>
                 <Space>
                   <Button 
                     type="text"
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="text-[var(--color-cerulean)] hover:text-[var(--color-cerulean)] hover:opacity-80"
+                    className="pagination-button"
                   >
                     Previous
                   </Button>
@@ -398,7 +448,7 @@ const LedgerPage = () => {
                     type="text"
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="text-[var(--color-cerulean)] hover:text-[var(--color-cerulean)] hover:opacity-80"
+                    className="pagination-button"
                   >
                     Next
                   </Button>
@@ -408,18 +458,17 @@ const LedgerPage = () => {
           </div>
 
           {/* Right Half - Charts */}
-          <div className="w-1/2 flex flex-col gap-4 overflow-auto">
+          <div className="content-section">
             {/* Income vs Expenses Chart */}
-            <Card className="rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xs font-bold text-[var(--color-night)]">Income vs. Expenses</h2>
-                <Space>
+            <div className="card chart-container">
+              <div className="chart-header">
+                <h2 className="chart-title">Income vs. Expenses</h2>
+                <Space className="chart-controls" size="small">
                   <Radio.Group 
                     value={timeFrame} 
                     onChange={(e) => setTimeFrame(e.target.value)}
                     size="small"
                     buttonStyle="solid"
-                    className="flex-nowrap"
                   >
                     <Radio.Button value="all">All Time</Radio.Button>
                     <Radio.Button value="custom">Custom</Radio.Button>
@@ -436,59 +485,54 @@ const LedgerPage = () => {
                   )}
                 </Space>
               </div>
-              <div className="h-64">
+              <div className="chart-content">
                 {barChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={barChartData}>
+                    <BarChart data={barChartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
                       <XAxis 
                         dataKey="date" 
                         stroke="#666"
-                        fontSize={10}
-                        tickFormatter={(value) => value}
+                        angle={-45}
+                        textAnchor="end"
+                        height={40}
+                        interval={0}
                       />
                       <YAxis 
                         stroke="#666"
-                        fontSize={10}
                         tickFormatter={(value) => `$${value}`}
-                        domain={['auto', 'auto']}
+                        width={50}
                       />
                       <Tooltip 
                         formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
-                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', fontSize: '10px' }}
+                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px' }}
                       />
-                      <Legend wrapperStyle={{ fontSize: '10px' }} />
-                      <Bar 
-                        dataKey="income" 
-                        fill="var(--color-pistachio)" 
-                        name="Income"
+                      <Legend 
+                        verticalAlign="top"
+                        height={20}
                       />
-                      <Bar 
-                        dataKey="expense" 
-                        fill="var(--color-cerulean)" 
-                        name="Expense"
-                      />
+                      <Bar dataKey="income" fill="var(--color-pistachio)" name="Income" />
+                      <Bar dataKey="expense" fill="var(--color-cerulean)" name="Expense" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-[var(--color-cerulean)] text-xs">
+                  <div className="empty-chart-message">
                     No data available
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
 
             {/* Category Distribution Chart */}
-            <Card className="rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xs font-bold text-[var(--color-night)]">Category Distribution</h2>
-                <Space>
+            <div className="card chart-container">
+              <div className="chart-header">
+                <h2 className="chart-title">Category Distribution</h2>
+                <Space className="chart-controls" size="small">
                   <Radio.Group 
                     value={timeFrame} 
                     onChange={(e) => setTimeFrame(e.target.value)}
                     size="small"
                     buttonStyle="solid"
-                    className="flex-nowrap"
                   >
                     <Radio.Button value="all">All Time</Radio.Button>
                     <Radio.Button value="custom">Custom</Radio.Button>
@@ -505,31 +549,21 @@ const LedgerPage = () => {
                   )}
                 </Space>
               </div>
-              <div className="h-64">
+              <div className="chart-content">
                 {pieChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
+                    <PieChart margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                       <Pie
                         data={pieChartData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        outerRadius={80}
+                        innerRadius={40}
+                        outerRadius="60%"
                         fill="#8884d8"
                         dataKey="value"
                         nameKey="name"
-                        label={({ percent }) => (
-                          <text 
-                            x={0} 
-                            y={0} 
-                            fill="var(--color-night)"
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            style={{ fontSize: '10px' }}
-                          >
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        )}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
                         {pieChartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -537,31 +571,51 @@ const LedgerPage = () => {
                       </Pie>
                       <Tooltip 
                         formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
-                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', fontSize: '10px' }}
+                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px' }}
                       />
                       <Legend 
-                        wrapperStyle={{ fontSize: '10px' }}
+                        verticalAlign="bottom"
+                        height={20}
                       />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-[var(--color-cerulean)] text-xs">
+                  <div className="empty-chart-message">
                     No category data available
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Transaction Form Modal */}
       <Modal
-        title={editingTransaction ? "Edit Transaction" : "Add Transaction"}
+        title={
+          <span className="modal-title">
+            {editingTransaction ? "Edit Transaction" : "Add Transaction"}
+          </span>
+        }
         open={showForm}
         onCancel={handleFormCancel}
         footer={null}
         width={500}
+        className="transaction-modal"
+        styles={{
+          content: {
+            borderRadius: '8px',
+            padding: '24px',
+          },
+          header: {
+            paddingBottom: '16px',
+            borderBottom: '1px solid var(--color-offwhite)',
+          },
+          body: {
+            padding: '24px 0',
+            fontSize: '1em'
+          },
+        }}
       >
         <TransactionForm
           transaction={editingTransaction || undefined}

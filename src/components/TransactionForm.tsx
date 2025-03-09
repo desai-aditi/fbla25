@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Transaction, TransactionCategory } from '../types/finance';
-import { Form, Input, Select, DatePicker, Button, Space } from 'antd';
+import { Form, Input, Select, DatePicker, Button } from 'antd';
 import dayjs from 'dayjs';
 
 interface TransactionFormProps {
@@ -10,22 +10,47 @@ interface TransactionFormProps {
 }
 
 interface FormValues {
-  date: dayjs.Dayjs;
-  amount: string | number;
   type: 'income' | 'expense';
-  category: TransactionCategory;
   description: string;
+  amount: string;
+  category: TransactionCategory;
+  date: dayjs.Dayjs;
 }
 
-const TransactionForm = ({ transaction, onSubmit, onCancel }: TransactionFormProps) => {
+const INCOME_CATEGORIES = [
+  { value: 'Work', label: 'Work' },
+  { value: 'Allowance', label: 'Allowance' },
+  { value: 'Part-time Job', label: 'Part-time Job' },
+  { value: 'Gift', label: 'Gift' },
+  { value: 'Other Income', label: 'Other Income' },
+];
+
+const EXPENSE_CATEGORIES = [
+  { value: 'Food', label: 'Food' },
+  { value: 'Transportation', label: 'Transportation' },
+  { value: 'Entertainment', label: 'Entertainment' },
+  { value: 'Clothing', label: 'Clothing' },
+  { value: 'Education', label: 'Education' },
+  { value: 'Savings', label: 'Savings' },
+  { value: 'Other Expense', label: 'Other Expense' },
+];
+
+const TransactionForm: React.FC<TransactionFormProps> = ({
+  transaction,
+  onSubmit,
+  onCancel,
+}) => {
   const [form] = Form.useForm<FormValues>();
+  const [transactionType, setTransactionType] = useState<'income' | 'expense'>(
+    transaction?.type || 'expense'
+  );
 
   useEffect(() => {
     if (transaction) {
       form.setFieldsValue({
         ...transaction,
         amount: transaction.amount.toString(),
-        date: dayjs(transaction.date)
+        date: dayjs(transaction.date),
       });
     }
   }, [transaction, form]);
@@ -33,9 +58,15 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }: TransactionFormPro
   const handleSubmit = (values: FormValues) => {
     onSubmit({
       ...values,
-      amount: Number(values.amount),
-      date: values.date.format('YYYY-MM-DD')
+      date: values.date.toISOString(),
+      amount: parseFloat(values.amount),
     });
+  };
+
+  const handleTypeChange = (value: 'income' | 'expense') => {
+    setTransactionType(value);
+    // Reset category when type changes
+    form.setFieldValue('category', undefined);
   };
 
   return (
@@ -43,95 +74,95 @@ const TransactionForm = ({ transaction, onSubmit, onCancel }: TransactionFormPro
       form={form}
       layout="vertical"
       onFinish={handleSubmit}
+      className="space-y-4"
       initialValues={{
-        date: transaction ? dayjs(transaction.date) : dayjs(),
-        amount: transaction ? transaction.amount.toString() : '',
-        type: transaction?.type || 'expense',
-        category: transaction?.category || 'Food',
-        description: transaction?.description || ''
+        type: transactionType,
+        date: dayjs(),
       }}
     >
       <Form.Item
-        label="Date"
-        name="date"
-        rules={[{ required: true, message: 'Please select a date' }]}
+        name="type"
+        label={<span className="text-[var(--color-night)] font-medium">Transaction Type</span>}
+        rules={[{ required: true, message: 'Please select a transaction type' }]}
       >
-        <DatePicker className="w-full" />
-      </Form.Item>
-
-      <Form.Item
-        label="Amount"
-        name="amount"
-        rules={[
-          { required: true, message: 'Please enter an amount' },
-          { 
-            pattern: /^\d*\.?\d{0,2}$/,
-            message: 'Please enter a valid amount with up to 2 decimal places'
-          },
-          {
-            validator: (_, value) => {
-              if (value && Number(value) <= 0) {
-                return Promise.reject('Amount must be greater than 0');
-              }
-              return Promise.resolve();
-            }
-          }
-        ]}
-      >
-        <Input 
-          type="text"
-          prefix="$"
-          onChange={(e) => {
-            const value = e.target.value.replace(/[^\d.]/g, '');
-            if (/^\d*\.?\d{0,2}$/.test(value)) {
-              form.setFieldsValue({ amount: value });
-            }
-          }}
+        <Select
+          className="h-[38px]"
+          options={[
+            { value: 'income', label: 'Income' },
+            { value: 'expense', label: 'Expense' },
+          ]}
+          onChange={handleTypeChange}
+          style={{ fontFamily: 'Libre Franklin' }}
         />
       </Form.Item>
 
       <Form.Item
-        label="Type"
-        name="type"
-        rules={[{ required: true, message: 'Please select a type' }]}
-      >
-        <Select>
-          <Select.Option value="income">Income</Select.Option>
-          <Select.Option value="expense">Expense</Select.Option>
-        </Select>
-      </Form.Item>
-
-      <Form.Item
-        label="Category"
-        name="category"
-        rules={[{ required: true, message: 'Please select a category' }]}
-      >
-        <Select>
-          <Select.Option value="Food">Food & Dining</Select.Option>
-          <Select.Option value="Transportation">Transportation</Select.Option>
-          <Select.Option value="Entertainment">Entertainment</Select.Option>
-          <Select.Option value="Utilities">Utilities</Select.Option>
-          <Select.Option value="Salary">Salary</Select.Option>
-          <Select.Option value="Other">Other</Select.Option>
-        </Select>
-      </Form.Item>
-
-      <Form.Item
-        label="Description"
         name="description"
+        label={<span className="text-[var(--color-night)] font-medium">Description</span>}
         rules={[{ required: true, message: 'Please enter a description' }]}
       >
-        <Input />
+        <Input 
+          placeholder="Enter transaction description"
+          className="h-[38px]"
+          style={{ fontFamily: 'Libre Franklin' }}
+        />
       </Form.Item>
 
-      <Form.Item>
-        <Space className="w-full justify-end">
-          <Button onClick={onCancel}>Cancel</Button>
-          <Button type="primary" htmlType="submit">
-            {transaction ? 'Update Transaction' : 'Add Transaction'}
-          </Button>
-        </Space>
+      <Form.Item
+        name="amount"
+        label={<span className="text-[var(--color-night)] font-medium">Amount</span>}
+        rules={[
+          { required: true, message: 'Please enter an amount' },
+          { pattern: /^\d+(\.\d{0,2})?$/, message: 'Please enter a valid amount' },
+        ]}
+      >
+        <Input
+          prefix="$"
+          type="number"
+          step="0.01"
+          placeholder="0.00"
+          className="h-[38px]"
+          style={{ fontFamily: 'Libre Franklin' }}
+        />
       </Form.Item>
+
+      <Form.Item
+        name="category"
+        label={<span className="text-[var(--color-night)] font-medium">Category</span>}
+        rules={[{ required: true, message: 'Please select a category' }]}
+      >
+        <Select
+          className="h-[38px]"
+          placeholder="Select a category"
+          options={[
+            {
+              label: transactionType === 'income' ? 'Income Categories' : 'Expense Categories',
+              options: transactionType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES,
+            },
+          ]}
+          style={{ fontFamily: 'Libre Franklin' }}
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="date"
+        label={<span className="text-[var(--color-night)] font-medium">Date</span>}
+        rules={[{ required: true, message: 'Please select a date' }]}
+      >
+        <DatePicker 
+          className="w-full h-[38px]"
+          style={{ fontFamily: 'Libre Franklin' }}
+        />
+      </Form.Item>
+
+      <div className="flex justify-end space-x-4 pt-4">
+        <Button onClick={onCancel} className="h-[38px]">
+          Cancel
+        </Button>
+        <Button type="primary" htmlType="submit" className="h-[38px]">
+          {transaction ? 'Update' : 'Add'} Transaction
+        </Button>
+      </div>
     </Form>
   );
 };

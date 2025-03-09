@@ -8,7 +8,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { Button, Radio, Card, Statistic } from 'antd';
+import { Radio, Card, Statistic } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 
 // Finance tips for the AI section
@@ -57,7 +57,6 @@ const PortfolioPage = () => {
   } = useFinance();
   
   const [timeFrame, setTimeFrame] = useState<'week' | 'month' | 'all'>('month');
-  const [pieChartTimeFrame, setPieChartTimeFrame] = useState<'week' | 'month' | 'all'>('month');
   const [lineChartData, setLineChartData] = useState<ChartData[]>([]);
   const [pieChartData, setPieChartData] = useState<PieData[]>([]);
   const [randomTip, setRandomTip] = useState('');
@@ -190,13 +189,13 @@ const PortfolioPage = () => {
     // Pie chart data preparation
     let pieFilteredTransactions;
     
-    if (pieChartTimeFrame === 'week') {
+    if (timeFrame === 'week') {
       startDate = subDays(new Date(), 6); // Last 7 days
       pieFilteredTransactions = transactions.filter(t => {
         const transactionDate = new Date(t.date);
         return transactionDate >= startDate && transactionDate <= endDate;
       });
-    } else if (pieChartTimeFrame === 'month') {
+    } else if (timeFrame === 'month') {
       startDate = startOfMonth(new Date());
       pieFilteredTransactions = transactions.filter(t => {
         const transactionDate = new Date(t.date);
@@ -223,7 +222,7 @@ const PortfolioPage = () => {
       .sort((a, b) => b.value - a.value);
 
     setPieChartData(pieData);
-  }, [transactions, timeFrame, pieChartTimeFrame]);
+  }, [transactions, timeFrame]);
 
   // Get random finance tip
   useEffect(() => {
@@ -246,14 +245,16 @@ const PortfolioPage = () => {
 
   return (
     <Layout>
-      <div className="h-full flex flex-col">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-[var(--color-night)]">Welcome back, {currentUser?.name || 'Student'}!</h1>
-          <p className="text-[var(--color-cerulean)] text-sm">Your sophisticated financial dashboard awaits</p>
+      <div className="portfolio-page-container">
+        {/* Welcome Section - Fixed height */}
+        <div className="page-header">
+          <h1 className="page-title">
+            Welcome back, {currentUser?.name || 'Student'}
+          </h1>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+        <div className="quick-stats">
           <Card className="rounded-lg border-l-4 border-[var(--color-darkgreen)]">
             <Statistic
               title={<span className="text-sm font-semibold text-[var(--color-night)]">Current Balance</span>}
@@ -298,187 +299,191 @@ const PortfolioPage = () => {
           </Card>
         </div>
 
-        {/* Charts Section */}
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
+          {/* Charts Section - 70% */}
+          <div className="charts-section">
             {/* Left Column - Line Chart */}
-            <Card className="rounded-lg flex flex-col">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xs font-bold text-[var(--color-night)]">Income vs. Expenses</h2>
-                <Radio.Group 
-                  value={timeFrame} 
-                  onChange={(e) => setTimeFrame(e.target.value)}
-                  size="small"
-                  buttonStyle="solid"
-                  className="flex-nowrap"
-                >
-                  <Radio.Button value="week">This Week</Radio.Button>
-                  <Radio.Button value="month">This Month</Radio.Button>
-                  <Radio.Button value="all">All Time</Radio.Button>
-                </Radio.Group>
-              </div>
-              <div className="h-64">
-                {lineChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={lineChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
-                      <XAxis 
-                        dataKey="date" 
-                        stroke="#666"
-                        fontSize={10}
-                        tickFormatter={(value) => value}
-                      />
-                      <YAxis 
-                        stroke="#666"
-                        fontSize={10}
-                        tickFormatter={(value) => `$${value}`}
-                        domain={['auto', 'auto']}
-                      />
-                      <Tooltip 
-                        formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
-                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', fontSize: '10px' }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '10px' }} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="income" 
-                        stroke="var(--color-pistachio)" 
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }} 
-                        name="Income"
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="expense" 
-                        stroke="var(--color-cerulean)" 
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                        name="Expense"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-[var(--color-cerulean)] text-xs">
-                    No data available for selected time period
-                  </div>
-                )}
+            <Card className="w-full h-full" bodyStyle={{ height: '100%', padding: '16px' }}>
+              <div className="h-full flex flex-col">
+                <div className="flex sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <h2 className="text-lg font-bold text-[var(--color-night)]" style={{ fontFamily: 'Fraunces' }}>Income vs. Expenses</h2>
+                  <Radio.Group 
+                    value={timeFrame} 
+                    onChange={(e) => setTimeFrame(e.target.value)}
+                    size="small"
+                    buttonStyle="solid"
+                    className="flex-nowrap"
+                  >
+                    <Radio.Button value="week">Week</Radio.Button>
+                    <Radio.Button value="month">Month</Radio.Button>
+                    <Radio.Button value="all">All</Radio.Button>
+                  </Radio.Group>
+                </div>
+                <div className="flex-1 min-h-0">
+                  {lineChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={lineChartData} margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#666"
+                          fontSize={12}
+                          tickFormatter={(value) => value}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                          interval={0}
+                        />
+                        <YAxis 
+                          stroke="#666"
+                          fontSize={12}
+                          tickFormatter={(value) => `$${value}`}
+                          width={80}
+                        />
+                        <Tooltip 
+                          formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
+                          contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px' }}
+                        />
+                        <Legend 
+                          verticalAlign="top"
+                          height={36}
+                          wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="income" 
+                          stroke="var(--color-pistachio)" 
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 5 }} 
+                          name="Income"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="expense" 
+                          stroke="var(--color-cerulean)" 
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 5 }}
+                          name="Expense"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-[var(--color-cerulean)] text-xs">
+                      No data available for selected time period
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
 
             {/* Right Column - Pie Chart */}
-            <Card className="rounded-lg flex flex-col">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xs font-bold text-[var(--color-night)]">Expense Categories</h2>
-                <Radio.Group 
-                  value={pieChartTimeFrame} 
-                  onChange={(e) => setPieChartTimeFrame(e.target.value)}
-                  size="small"
-                  buttonStyle="solid"
-                  className="flex-nowrap"
-                >
-                  <Radio.Button value="week">This Week</Radio.Button>
-                  <Radio.Button value="month">This Month</Radio.Button>
-                  <Radio.Button value="all">All Time</Radio.Button>
-                </Radio.Group>
-              </div>
-              <div className="h-64">
-                {pieChartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieChartData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        nameKey="name"
-                        label={({ percent }) => (
-                          <text 
-                            x={0} 
-                            y={0} 
-                            fill="var(--color-night)"
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            style={{ fontSize: '10px' }}
-                          >
-                            {`${(percent * 100).toFixed(0)}%`}
-                          </text>
-                        )}
-                      >
-                        {pieChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
-                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', fontSize: '10px' }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ fontSize: '10px' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-[var(--color-cerulean)] text-xs">
-                    No expense data available
-                  </div>
-                )}
+            <Card className="w-full h-full" bodyStyle={{ height: '100%', padding: '16px' }}>
+              <div className="h-full flex flex-col">
+                <div className="flex sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <h2 className="text-lg font-bold text-[var(--color-night)]" style={{ fontFamily: 'Fraunces' }}>Expense Category Distribution</h2>
+                  <Radio.Group 
+                    value={timeFrame} 
+                    onChange={(e) => setTimeFrame(e.target.value)}
+                    size="small"
+                    buttonStyle="solid"
+                    className="flex-nowrap"
+                  >
+                    <Radio.Button value="week">Week</Radio.Button>
+                    <Radio.Button value="month">Month</Radio.Button>
+                    <Radio.Button value="all">All</Radio.Button>
+                  </Radio.Group>
+                </div>
+                <div className="flex-1 min-h-0">
+                  {pieChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                        <Pie
+                          data={pieChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          innerRadius={60}
+                          outerRadius="70%"
+                          fill="#8884d8"
+                          dataKey="value"
+                          nameKey="name"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {pieChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
+                          contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px' }}
+                        />
+                        <Legend 
+                          verticalAlign="bottom"
+                          height={36}
+                          wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-[var(--color-cerulean)] text-xs">
+                      No expense data available
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
           </div>
 
-          {/* Additional Stats and Financial Tip in a row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="rounded-lg">
+          {/* Bottom Stats - 15% */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card 
+              className="rounded-lg w-full h-full"
+            >
               <Statistic
                 title={<span className="text-sm font-semibold text-[var(--color-night)]">Biggest Expense</span>}
                 value={biggestExpense.amount}
                 precision={2}
                 prefix="$"
-                valueStyle={{ color: 'var(--color-cerulean)' }}
+                valueStyle={{ color: 'var(--color-cerulean)', fontSize: '1.25rem' }}
               />
               <p className="text-sm text-[var(--color-cerulean)]">{biggestExpense.category}</p>
               <p className="text-xs text-gray-500 mt-1">Primary spending category</p>
             </Card>
-            <Card className="rounded-lg">
+            <Card 
+              className="rounded-lg w-full h-full"
+            >
               <Statistic
                 title={<span className="text-sm font-semibold text-[var(--color-night)]">Most Profitable Month</span>}
                 value={mostProfitableMonth.amount}
                 precision={2}
                 prefix="$"
-                valueStyle={{ color: 'var(--color-pistachio)' }}
+                valueStyle={{ color: 'var(--color-pistachio)', fontSize: '1.25rem' }}
               />
               <p className="text-sm text-[var(--color-pistachio)]">{mostProfitableMonth.month}</p>
               <p className="text-xs text-gray-500 mt-1">Peak financial performance</p>
             </Card>
-            <Card className="rounded-lg">
+            <Card 
+              className="rounded-lg w-full h-full"
+            >
               <Statistic
                 title={<span className="text-sm font-semibold text-[var(--color-night)]">Savings Rate</span>}
                 value={savingsRate}
                 precision={1}
                 suffix="%"
-                valueStyle={{ color: 'var(--color-darkgreen)' }}
+                valueStyle={{ color: 'var(--color-darkgreen)', fontSize: '1.25rem' }}
               />
               <p className="text-xs text-[var(--color-night)]">of total income</p>
               <p className="text-xs text-gray-500 mt-1">Financial discipline metric</p>
             </Card>
-            <Card className="rounded-lg border border-[var(--color-cerulean)]">
-              <h2 className="text-sm font-semibold text-[var(--color-cerulean)] mb-1">💡 Financial Intelligence</h2>
+            <Card 
+              className="rounded-lg w-full h-full border border-[var(--color-cerulean)]"
+            >
+              <h2 className="text-md font-semibold text-[var(--color-cerulean)] mb-2">💡 Financial Intelligence</h2>
               <p className="text-sm text-[var(--color-night)]">{randomTip}</p>
-              <Button 
-                type="link" 
-                className="p-0 text-xs text-[var(--color-cerulean)] hover:text-[var(--color-darkgreen)]"
-              >
-                Explore advanced financial concepts
-              </Button>
             </Card>
           </div>
         </div>
-      </div>
     </Layout>
   );
 };

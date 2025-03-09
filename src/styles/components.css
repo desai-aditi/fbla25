@@ -1,0 +1,520 @@
+/* Base styles */
+:root {
+  /* Base font size calculation:
+   * - Minimum: 12px at 320px viewport
+   * - Maximum: 16px at 1920px viewport
+   * - Scales linearly between these points
+   */
+  font-size: clamp(12px, calc(12px + 4 * ((100vw - 320px) / (1920 - 320))), 16px);
+}
+
+.portfolio-page-container {
+  display: grid;
+  grid-template-rows: 2.5em 15% 60% 15%;
+  height: 98vh;
+  padding: 1.5em;
+  gap: 1em;
+}
+
+/* Layout */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.layout-main {
+  flex: 1;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.layout-content {
+  height: 100%;
+  width: 100%;
+  max-height: 100vh;
+  overflow: auto;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  width: 20vw;
+  max-width: 200px;
+  min-width: 180px;
+  height: 100vh;
+  background-color: var(--color-darkgreen);
+  color: var(--color-white);
+  transform: translateX(-100%);
+  transition: transform 0.2s;
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    position: static;
+    transform: none;
+  }
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-logo {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-logo-text {
+  font-size: 3em;
+  font-style: italic;
+  letter-spacing: -0.05em;
+  font-family: 'Fraunces', serif;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem;
+}
+
+.sidebar-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  color: white;
+  transition: all 0.2s;
+}
+
+.sidebar-nav-link:hover {
+  background-color: var(--color-pistachio);
+  color: var(--color-darkgreen);
+}
+
+.sidebar-nav-link.active {
+  background-color: var(--color-pistachio);
+  color: var(--color-darkgreen);
+}
+
+.sidebar-nav-link-icon {
+  margin-right: 0.75rem;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+}
+
+.sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  color: white;
+  transition: all 0.2s;
+}
+
+.sidebar-logout-btn:hover {
+  background-color: var(--color-pistachio);
+  color: var(--color-darkgreen);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 30;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-overlay {
+    display: none;
+  }
+}
+
+/* Mobile menu button */
+.mobile-menu-btn {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-darkgreen);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 1024px) {
+  .mobile-menu-btn {
+    display: none;
+  }
+}
+
+.ant-statistic-content{
+  font-size: 20px!important;
+}
+
+.ant-card-body {
+  padding: 0.9em !important;
+}
+
+/* Page layout */
+.page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5em;
+  gap: 1em;
+}
+
+.page-title {
+  font-size: 2em;
+  font-weight: bold;
+  color: var(--color-night);
+  font-family: 'Fraunces', serif;
+}
+
+.page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ledger-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em;
+}
+
+.quick-stats {
+  font-size: .9rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1em;
+}
+
+@media (min-width: 1024px) {
+  .page-content {
+    gap: 1em;
+  }
+}
+
+/* Card styles */
+.card {
+  background-color: white;
+  border-radius: 0.5em;
+  padding: 0.75em;
+}
+
+/* Chart containers */
+.charts-section{
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1em;
+}
+
+
+.chart-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-bottom: 0.75em;
+}
+
+@media (min-width: 640px) {
+  .chart-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.chart-title {
+  font-size: 1em;
+  font-weight: bold;
+  color: var(--color-night);
+  font-family: 'Fraunces', serif;
+}
+
+.chart-content {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Table styles */
+.table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.table-content {
+  flex: 1;
+  height: 100%;
+}
+
+/* Transaction table styles */
+.transaction-table {
+  font-size: 0.85em !important;
+}
+
+/* Target all cells in the table */
+.transaction-table .ant-table-thead > tr > th,
+.transaction-table .ant-table-tbody > tr > td {
+  font-size: 0.85em !important;
+  padding: 0.5em !important;
+  line-height: 1.2 !important;
+}
+
+/* Header cells */
+.transaction-table .ant-table-thead > tr > th {
+  font-weight: 600 !important;
+  background-color: #fafafa !important;
+  white-space: nowrap !important;
+}
+
+/* Body cells */
+.transaction-table .ant-table-tbody > tr > td {
+  white-space: nowrap !important;
+}
+
+/* Description column specific styles */
+.transaction-table .ant-table-tbody > tr > td.ant-table-cell-ellipsis {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 0 !important; /* This is crucial for ellipsis to work */
+}
+
+.transaction-table .ant-table-tbody > tr > td.ant-table-cell-ellipsis > span {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Hover state */
+.transaction-table .ant-table-tbody > tr:hover > td {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Sort icons */
+.transaction-table .ant-table-column-sorter {
+  font-size: 0.85em !important;
+}
+
+/* Empty state */
+.transaction-table .ant-table-placeholder {
+  font-size: 0.85em !important;
+}
+
+.table-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-top: 0.75em;
+  padding-top: 0.75em;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (min-width: 640px) {
+  .table-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.table-pagination-info {
+  font-size: 0.85em;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Search and filter section */
+.search-filter-section {
+  margin-bottom: 0.75em;
+}
+
+.search-input-container {
+  flex: 1;
+  min-width: 150px;
+}
+
+.filter-panel {
+  margin-top: 0.75em;
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  font-size: 0.85em;
+}
+
+.filter-group .ant-radio-button-wrapper {
+  padding: 0 0.75em;
+  height: 2em;
+  line-height: 2em;
+}
+
+.date-picker {
+  width: 100%;
+  font-size: 0.85em;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 0.75em;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  color: var(--color-night);
+  margin-bottom: 0.25em;
+  font-size: 0.85em;
+}
+
+.form-input {
+  width: 100%;
+  height: 38px;
+  font-family: 'Libre Franklin', sans-serif;
+}
+
+/* Utility classes */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+/* Content sections */
+.content-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.75em;
+}
+
+@media (min-width: 1024px) {
+  .content-section {
+    height: calc(100vh - 8em); /* Account for header and padding */
+  }
+}
+
+/* Chart adjustments */
+.recharts-text {
+  font-size: 0.75em !important;
+}
+
+.recharts-legend-wrapper {
+  font-size: 0.85em !important;
+}
+
+/* Modal styles */
+.transaction-modal {
+  font-size: 0.85em;
+}
+
+.modal-title {
+  color: var(--color-night);
+  font-weight: 500;
+  font-family: 'Fraunces', serif;
+  font-size: 1.1em;
+}
+
+/* Buttons */
+.primary-button {
+  font-size: 0.85em;
+  height: 2.5em;
+  padding: 0 1em;
+}
+
+.icon-button {
+  font-size: 1em;
+}
+
+.pagination-button {
+  font-size: 0.85em;
+}
+
+/* Empty states */
+.empty-chart-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-cerulean);
+  font-size: 0.875em;
+}
+
+/* Chart controls */
+.chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Responsive utilities */
+.flex-row-sm {
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .flex-row-sm {
+    flex-direction: row;
+  }
+}
+
+:where(.css-dev-only-do-not-override-1rjlczn).ant-space-gap-col-small {
+  column-gap: 0;
+}
